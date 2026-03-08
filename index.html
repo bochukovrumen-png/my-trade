@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>My Trade</title>
-
+<title>My Trade Journal</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <style>
@@ -19,102 +18,110 @@ margin:5px;
 }
 
 button{
-padding:8px 14px;
-background:#2563eb;
+padding:8px 12px;
+background:#2f80ed;
 border:none;
 color:white;
-border-radius:6px;
+cursor:pointer;
 }
 
 table{
 width:100%;
-margin-top:20px;
+margin-top:30px;
 border-collapse:collapse;
 }
 
-td,th{
+th,td{
+border:1px solid #333;
 padding:10px;
-border-bottom:1px solid #333;
+text-align:center;
+}
+
+th{
+background:#111827;
 }
 </style>
-
 </head>
 
 <body>
 
-<h1>My Trade</h1>
+<h1>My Trade Journal</h1>
 
-<h2>New Trade</h2>
+<h3>Add Trade</h3>
 
-<input id="asset" placeholder="Asset">
-<input id="entry" placeholder="Entry price">
-<input id="size" placeholder="Size">
-<input id="trader" placeholder="Trader">
+<input id="asset" placeholder="Asset (BTCUSDT)">
+<input id="entry" placeholder="Entry Price">
+<input id="exit" placeholder="Exit Price">
+<input id="size" placeholder="Position Size">
 
 <button onclick="addTrade()">Add Trade</button>
 
-<h2>Open Trades</h2>
+<h2>Trades</h2>
 
-<table id="trades"></table>
+<table>
+<thead>
+<tr>
+<th>Asset</th>
+<th>Entry</th>
+<th>Exit</th>
+<th>Size</th>
+<th>Profit</th>
+</tr>
+</thead>
+
+<tbody id="tradeTable"></tbody>
+</table>
 
 <script>
 
 const supabase = supabase.createClient(
-"PASTE_SUPABASE_URL",
-"PASTE_SUPABASE_ANON_KEY"
-)
+"YOUR_SUPABASE_URL",
+"YOUR_SUPABASE_ANON_KEY"
+);
 
 async function addTrade(){
 
 let asset=document.getElementById("asset").value
-let entry=document.getElementById("entry").value
-let size=document.getElementById("size").value
-let trader=document.getElementById("trader").value
+let entry=parseFloat(document.getElementById("entry").value)
+let exit=parseFloat(document.getElementById("exit").value)
+let size=parseFloat(document.getElementById("size").value)
 
-await supabase
-.from("trades")
-.insert([
+let profit=(exit-entry)*size
+
+await supabase.from("trades").insert([
 {
-asset:asset,
-entry_price:entry,
-position_size:size,
-trader:trader,
-status:"OPEN"
+актив:asset,
+входна_цена:entry,
+изходна_цена:exit,
+размер_на_позицията:size
 }
 ])
 
 loadTrades()
-
 }
 
 async function loadTrades(){
 
-let { data } = await supabase
+const {data}=await supabase
 .from("trades")
 .select("*")
 
-let table=document.getElementById("trades")
+let table=document.getElementById("tradeTable")
+table.innerHTML=""
 
-table.innerHTML=`
-<tr>
-<th>Asset</th>
-<th>Entry</th>
-<th>Size</th>
-<th>Trader</th>
-</tr>
-`
+data.forEach(trade=>{
 
-data.forEach(t=>{
+let profit=(trade.изходна_цена-trade.входна_цена)*trade.размер_на_позицията
 
 table.innerHTML+=`
 <tr>
-<td>${t.asset}</td>
-<td>${t.entry_price}</td>
-<td>${t.position_size}</td>
-<td>${t.trader}</td>
+<td>${trade.актив}</td>
+<td>${trade.входна_цена}</td>
+<td>${trade.изходна_цена}</td>
+<td>${trade.размер_на_позицията}</td>
+<td>${profit.toFixed(2)}</td>
 </tr>
 `
-
 })
 
 }
@@ -124,5 +131,4 @@ loadTrades()
 </script>
 
 </body>
-
 </html>
