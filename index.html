@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>My Trade</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+body{
+background:#0b0f19;
+color:white;
+font-family:Arial;
+padding:40px;
+}
+
+input{
+padding:8px;
+margin:5px;
+}
+
+button{
+padding:8px 14px;
+background:#2563eb;
+border:none;
+color:white;
+border-radius:6px;
+}
+
+table{
+width:100%;
+margin-top:20px;
+border-collapse:collapse;
+}
+
+td,th{
+padding:10px;
+border-bottom:1px solid #333;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>My Trade</h1>
+
+<h2>New Trade</h2>
+
+<input id="asset" placeholder="Asset">
+<input id="entry" placeholder="Entry price">
+<input id="size" placeholder="Size">
+<input id="trader" placeholder="Trader">
+
+<button onclick="addTrade()">Add Trade</button>
+
+<h2>Open Trades</h2>
+
+<table id="trades"></table>
+
+<script>
+
+const supabase = supabase.createClient(
+"PASTE_SUPABASE_URL",
+"PASTE_SUPABASE_ANON_KEY"
+)
+
+async function addTrade(){
+
+let asset=document.getElementById("asset").value
+let entry=document.getElementById("entry").value
+let size=document.getElementById("size").value
+let trader=document.getElementById("trader").value
+
+await supabase
+.from("trades")
+.insert([
+{
+asset:asset,
+entry_price:entry,
+position_size:size,
+trader:trader,
+status:"OPEN"
+}
+])
+
+loadTrades()
+
+}
+
+async function loadTrades(){
+
+let { data } = await supabase
+.from("trades")
+.select("*")
+
+let table=document.getElementById("trades")
+
+table.innerHTML=`
+<tr>
+<th>Asset</th>
+<th>Entry</th>
+<th>Size</th>
+<th>Trader</th>
+</tr>
+`
+
+data.forEach(t=>{
+
+table.innerHTML+=`
+<tr>
+<td>${t.asset}</td>
+<td>${t.entry_price}</td>
+<td>${t.position_size}</td>
+<td>${t.trader}</td>
+</tr>
+`
+
+})
+
+}
+
+loadTrades()
+
+</script>
+
+</body>
+
+</html>
