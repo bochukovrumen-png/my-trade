@@ -1,191 +1,47 @@
 <!DOCTYPE html>
-<html lang="bg">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Trading Journal</title>
-
+<title>Trade Test</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-body{
-font-family:Arial;
-background:#0f172a;
-color:white;
-padding:20px;
-}
-
-h1{
-text-align:center;
-}
-
-form{
-background:#1e293b;
-padding:20px;
-border-radius:10px;
-margin-bottom:30px;
-}
-
-input,select,button{
-padding:10px;
-margin:5px;
-border-radius:5px;
-border:none;
-}
-
-button{
-background:#22c55e;
-color:white;
-cursor:pointer;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-background:#1e293b;
-}
-
-th,td{
-padding:10px;
-border-bottom:1px solid #334155;
-text-align:center;
-}
-
-canvas{
-background:white;
-margin-top:30px;
-}
-</style>
 </head>
 
 <body>
 
-<h1>Trading Journal</h1>
+<h2>Test Trade Insert</h2>
 
-<form id="tradeForm">
+<button onclick="testInsert()">Insert Test Trade</button>
 
-<select id="trader">
-<option value="Trader1">Trader 1</option>
-<option value="Trader2">Trader 2</option>
-</select>
-
-<input id="asset" placeholder="Актив (BTC, Gold)">
-<input id="entry" type="number" step="0.01" placeholder="Вход">
-<input id="exit" type="number" step="0.01" placeholder="Изход">
-<input id="size" type="number" step="0.01" placeholder="Размер">
-
-<button type="submit">Добави трейд</button>
-
-</form>
-
-<h2>Trades</h2>
-
-<table>
-<thead>
-<tr>
-<th>Trader</th>
-<th>Актив</th>
-<th>Вход</th>
-<th>Изход</th>
-<th>Размер</th>
-<th>P/L</th>
-</tr>
-</thead>
-
-<tbody id="tradeTable"></tbody>
-
-</table>
-
-<canvas id="equityChart"></canvas>
+<p id="status"></p>
 
 <script>
 
-const supabase = window.supabase.createClient(
+const supabaseClient = supabase.createClient(
 "https://yhzuzchcezbguigwdxzq.supabase.co",
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InloenV6Y2hjZXpiZ3VpcXdkeHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5OTk0OTksImV4cCI6MjA4ODU3NTQ5OX0.pmRrzgycQjFvg29l1XM69dVFeEFENQg6hLaC2KjoZDo"
 )
 
-const table = document.getElementById("tradeTable")
+async function testInsert(){
 
-let chart
-let equity=[]
-
-async function loadTrades(){
-
-const {data,error}=await supabase
+const {data,error}=await supabaseClient
 .from("trades")
-.select("*")
+.insert([
+{
+trader:"Trader1",
+asset:"BTC",
+entry:50000,
+exit:51000,
+size:1
+}
+])
 
-table.innerHTML=""
-equity=[]
-
-let total=0
-
-data.forEach(t=>{
-
-const profit=(t.exit - t.entry)*t.size
-total+=profit
-equity.push(total)
-
-const row=`
-<tr>
-<td>${t.trader}</td>
-<td>${t.asset}</td>
-<td>${t.entry}</td>
-<td>${t.exit}</td>
-<td>${t.size}</td>
-<td>${profit.toFixed(2)}</td>
-</tr>
-`
-
-table.innerHTML+=row
-
-})
-
-drawChart()
-
+if(error){
+document.getElementById("status").innerText="ERROR: "+error.message
+}else{
+document.getElementById("status").innerText="SUCCESS: Trade inserted"
 }
 
-function drawChart(){
-
-const ctx=document.getElementById("equityChart")
-
-if(chart) chart.destroy()
-
-chart=new Chart(ctx,{
-type:"line",
-data:{
-labels:equity.map((_,i)=>i+1),
-datasets:[{
-label:"Equity",
-data:equity,
-borderWidth:2
-}]
 }
-})
-
-}
-
-document.getElementById("tradeForm")
-.addEventListener("submit",async e=>{
-
-e.preventDefault()
-
-const trader=document.getElementById("trader").value
-const asset=document.getElementById("asset").value
-const entry=parseFloat(document.getElementById("entry").value)
-const exit=parseFloat(document.getElementById("exit").value)
-const size=parseFloat(document.getElementById("size").value)
-
-await supabase
-.from("trades")
-.insert([{trader,asset,entry,exit,size}])
-
-loadTrades()
-
-})
-
-loadTrades()
 
 </script>
 
